@@ -7,9 +7,15 @@ RUN apk add --no-cache \
     libpng-dev \
     libxml2-dev \
     zip \
-    unzip
+    unzip \
+    libzip-dev \
+    exif-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    oniguruma-dev
 
-RUN docker-php-ext-install pdo_mysql bcmath gd
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql bcmath gd exif zip mbstring
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -19,13 +25,18 @@ WORKDIR /var/www
 # Copy project files
 COPY . .
 
-# Install dependencies laravel
+# Install Laravel dependencies (production)
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-EXPOSE 8000
+# Copy and set entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Jalankan server internal Laravel (untuk development)
-CMD php artisan serve --host=0.0.0.0 --port=8000
+EXPOSE 9000
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["php-fpm"]

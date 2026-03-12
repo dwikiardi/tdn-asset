@@ -1,35 +1,81 @@
 version: '3.8'
+
 services:
   app:
-    build: .
-    ports:
-      - "8000:8000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tdn-asset-app
+    container_name: tdn-asset-app
+    restart: unless-stopped
     volumes:
-      - .:/var/www
+      - app_storage:/var/www/storage
     environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - APP_KEY=base64:MASUKKAN_APP_KEY_KAMU_DISINI
+      - APP_NAME=TDN-Asset
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=base64:jLg4db7iA0H/PhGXUFCSSwKp1WHVCh2b0Z5ecuEe4Ag=
+      - APP_URL=http://localhost:8081
       - DB_CONNECTION=mysql
       - DB_HOST=db
       - DB_PORT=3306
-      - DB_DATABASE=asset_db
-      - DB_USERNAME=sail
-      - DB_PASSWORD=password
+      - DB_DATABASE=asset_management_system
+      - DB_USERNAME=asset_user
+      - DB_PASSWORD=asset_password
+      - CACHE_DRIVER=file
+      - SESSION_DRIVER=file
+      - QUEUE_CONNECTION=sync
+      - TRIDATU_BASE_URL=${TRIDATU_BASE_URL:-http://127.0.0.1:8001}
+      - TRIDATU_API_KEY=${TRIDATU_API_KEY:-tridatu_asset_mgmt_secret_2024}
+      - TRIDATU_CACHE_TTL=300
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - tdn-network
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: tdn-asset-nginx
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - app_storage:/var/www/storage:ro
+      - ./public:/var/www/public:ro
+    depends_on:
+      - app
+    networks:
+      - tdn-network
 
   db:
     image: mysql:8.0
+    container_name: tdn-asset-db
+    restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       - MYSQL_DATABASE=asset_management_system
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=sail
-      - MYSQL_PASSWORD=password
+      - MYSQL_USER=asset_user
+      - MYSQL_PASSWORD=asset_password
+      - MYSQL_ROOT_PASSWORD=rootpassword
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tdn-network
 
 volumes:
   db_data:
+    driver: local
+  app_storage:
+    driver: local
+
+networks:
+  tdn-network:
+    driver: bridge
