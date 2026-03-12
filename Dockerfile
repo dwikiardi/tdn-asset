@@ -1,6 +1,6 @@
 FROM php:8.2-fpm-alpine
 
-# Install system dependencies & PHP extensions
+# Install system dependencies
 RUN apk add --no-cache \
     git \
     curl \
@@ -17,12 +17,13 @@ RUN apk add --no-cache \
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql bcmath gd exif zip mbstring
 
-# Install Composer
+# Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Set working directory
 WORKDIR /var/www
 
-# Copy project files
+# Copy existing application directory contents
 COPY . .
 
 # Install Laravel dependencies (production)
