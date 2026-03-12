@@ -22,7 +22,7 @@ services:
   db:
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - "4444:4444"
     environment:
       - MYSQL_DATABASE=asset_management_system
       - MYSQL_ROOT_PASSWORD=root
