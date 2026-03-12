@@ -9,7 +9,6 @@ RUN apk add --no-cache \
     zip \
     unzip \
     libzip-dev \
-    exif-dev \
     freetype-dev \
     libjpeg-turbo-dev \
     oniguruma-dev
