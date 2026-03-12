@@ -35,8 +35,8 @@ phpunit.xml
 .editorconfig
 Developer_Notes.md
 
-# Docker files (no need to re-copy into image)
-docker
+# docker/ folder HARUS tersedia di build context (entrypoint.sh dibutuhkan Dockerfile)
+# docker
 
 # NPM build artifacts (already compiled into public/)
 package.json
