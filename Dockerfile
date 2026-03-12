@@ -25,6 +25,9 @@ WORKDIR /var/www
 # Copy existing application directory contents
 COPY . .
 
+# Share public directory
+RUN mkdir -p /shared/public && cp -R /var/www/public/* /shared/public/
+
 # Install Laravel dependencies (production)
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
