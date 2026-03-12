@@ -12,7 +12,7 @@ services:
       - APP_KEY=base64:base64:jLg4db7iA0H/PhGXUFCSSwKp1WHVCh2b0Z5ecuEe4Ag=
       - DB_CONNECTION=mysql
       - DB_HOST=db
-      - DB_PORT=3306
+      - DB_PORT=4444
       - DB_DATABASE=asset_management_system
       - DB_USERNAME=root
       - DB_PASSWORD=password
