@@ -5,48 +5,43 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Compatibility model for the old UI.
+ * Points to the 'asset_types' table but allows the old controllers to function.
+ */
 class Asset extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['category_id', 'supplier_id', 'uid', 'specification', 'production_year', 'purchase_date', 'purchase_price', 'condition', 'status'];
-    /**
-     * Get the category that owns the Asset
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
+    protected $table = 'asset_types';
+
+    protected $fillable = [
+        'name', 'brand', 'category_id', 'supplier_id', 'uid', 'specification',
+        'production_year', 'purchase_date', 'purchase_price', 'condition', 'status', 'uom'
+    ];
+
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
-    /**
-     * Get the supplier that owns the Asset
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
     }
 
-    /**
-     * Get all of the transaction_detail for the Asset
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function transaction_detail()
-    {
-        return $this->hasMany(TransactionDetail::class);
-    }
-
-    /**
-     * Get all of the image for the Asset
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function image()
     {
-        return $this->hasMany(AssetImages::class);
+        return $this->hasMany(AssetImages::class, 'asset_id');
+    }
+
+    public function units()
+    {
+        return $this->hasMany(AssetUnit::class, 'asset_type_id');
+    }
+
+    public function transaction_detail()
+    {
+        return $this->hasMany(TransactionDetail::class, 'asset_unit_id');
     }
 }

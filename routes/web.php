@@ -33,7 +33,17 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
     Route::get('/dashboard', function () {
-        return view('components.dashboard');
+        $totalItems = \App\Models\AssetUnit::count();
+        $totalIn = \App\Models\AssetUnit::where('status', \App\Models\AssetUnit::STATUS_IN_STOCK)->count();
+        $totalOut = \App\Models\AssetUnit::where('status', \App\Models\AssetUnit::STATUS_DEPLOYED)->count();
+        $totalBroken = \App\Models\AssetUnit::where('status', \App\Models\AssetUnit::STATUS_FAULTY)->count();
+        $totalRented = \App\Models\AssetUnit::whereIn('ownership_status', ['rented_to_customer', 'rented_company'])->count();
+        $totalCompanyOwned = \App\Models\AssetUnit::where('ownership_status', 'company_owned')->count();
+        $totalSold = \App\Models\AssetUnit::where('ownership_status', 'sold_to_customer')->count();
+
+        return view('components.dashboard', compact(
+            'totalItems', 'totalIn', 'totalOut', 'totalBroken', 'totalRented', 'totalCompanyOwned', 'totalSold'
+        ));
     })->name('dashboard');
 
     Route::get('/employee', [EmployeeController::class, 'index'])->name('employee');
@@ -115,3 +125,6 @@ Route::get('/select/employee', [SelectController::class, 'employee'])->name('sel
 Route::get('/select/division', [SelectController::class, 'division'])->name('select.division');
 Route::get('/select/asset', [SelectController::class, 'asset'])->name('select.asset');
 Route::get('/select/asset/{id}', [SelectController::class, 'assetById'])->name('select.asset.id');
+Route::get('/select/customer', [SelectController::class, 'customer'])->name('select.customer');
+Route::get('/select/staff', [SelectController::class, 'staff'])->name('select.staff');
+Route::get('/select/customer-assets', [SelectController::class, 'getAssetsByCustomer'])->name('select.customer.assets');

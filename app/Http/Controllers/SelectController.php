@@ -7,10 +7,14 @@ use App\Models\Category;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\Supplier;
+use App\Models\Customer;
+use App\Models\AssetUnit;
+use App\Services\TridatuNetmonService;
 use Illuminate\Http\Request;
 
 class SelectController extends Controller
 {
+    public function __construct(protected TridatuNetmonService $tridatu) {}
     public function category(Request $request)
     {
         $search = $request->search;
@@ -101,18 +105,36 @@ class SelectController extends Controller
     public function asset(Request $request)
     {
         $search = $request->search;
+        $type = $request->type; // 'stock_in' or 'stock_out'
 
-        if ($search == '') {
-            $assets = Asset::orderby('uid', 'asc')->select('id', 'uid')->limit(10)->get();
-        } else {
-            $assets = Asset::orderby('uid', 'asc')->select('id', 'uid')->where('uid', 'like', '%' . $search . '%')->limit(10)->get();
+        $query = AssetUnit::with('assetType');
+
+        if ($type == 'stock_out') {
+            $query->where('status', AssetUnit::STATUS_IN_STOCK);
+        } elseif ($type == 'stock_in') {
+            $query->whereIn('status', [AssetUnit::STATUS_DEPLOYED, 'pulled', 'faulty']);
         }
 
+        if ($search != '') {
+            $query->where(function($q) use ($search) {
+                $q->where('serial_number', 'like', '%' . $search . '%')
+                  ->orWhere('mac_address', 'like', '%' . $search . '%')
+                  ->orWhereHas('assetType', function($sq) use ($search) {
+                      $sq->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('specification', 'like', '%' . $search . '%')
+                        ->orWhere('model', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        $units = $query->limit(10)->get();
+
         $response = array();
-        foreach ($assets as $asset) {
+        foreach ($units as $unit) {
+            $displayName = $unit->assetType->name ?: $unit->assetType->specification ?: $unit->assetType->model ?: 'Unknown';
             $response[] = array(
-                "id" => $asset->id,
-                "text" => $asset->uid
+                "id" => $unit->id,
+                "text" => ($unit->serial_number ?: $unit->mac_address ?: 'ID: '.$unit->id) . ' - ' . $displayName . ' (' . $unit->status . ')'
             );
         }
 
@@ -121,7 +143,91 @@ class SelectController extends Controller
 
     public function assetById($id)
     {
-        $asset = Asset::with('category')->find($id);
-        return response()->json($asset);
+        $unit = AssetUnit::with(['assetType.category', 'customer'])->find($id);
+        
+        // Map back to old UI expected format
+        if ($unit) {
+            $unit->uid = $unit->serial_number ?? $unit->mac_address ?? ('ID: ' . $unit->id);
+            $unit->category = $unit->assetType->category ?? null;
+            $unit->specification = $unit->assetType->specification ?? '-';
+            $unit->production_year = $unit->assetType->production_year ?? '-';
+            $unit->purchase_date = $unit->purchase_date ? $unit->purchase_date->format('Y-m-d') : '-';
+            $unit->purchase_price = number_format($unit->purchase_price ?? 0);
+            $unit->condition = $unit->status; // or mapping
+            $unit->status_label = $unit->status;
+            $unit->status = ($unit->status === AssetUnit::STATUS_IN_STOCK) ? 0 : 1; // 0=Standby/IN for old UI
+            
+            // CID (Customer ID) info for retrieval
+            $unit->cid = $unit->customer ? $unit->customer->external_id : null;
+            $unit->customer_name = $unit->customer ? $unit->customer->name : null;
+            $unit->quantity = $unit->quantity ?? 1;
+            $unit->uom = $unit->assetType->uom ?? 'pcs';
+            
+            $displayName = $unit->assetType->name ?: $unit->assetType->specification ?: $unit->assetType->model ?: 'Unknown';
+            $unit->text = $unit->uid . ' - ' . $displayName . ' (' . $unit->status_label . ')';
+        }
+
+        return response()->json($unit);
+    }
+
+    public function customer(Request $request)
+    {
+        $search = $request->search;
+        $customers = $this->tridatu->getCustomerList();
+
+        if ($search) {
+            $customers = array_filter($customers, function($c) use ($search) {
+                return (isset($c['nama']) && stripos($c['nama'], $search) !== false) || 
+                       (isset($c['cid']) && stripos($c['cid'], $search) !== false);
+            });
+        }
+
+        $response = [];
+        foreach (array_slice($customers, 0, 20) as $c) {
+            $response[] = [
+                'id' => $c['cid'] ?? $c['id'],
+                'text' => ($c['cid'] ?? '') . ' - ' . ($c['nama'] ?? '')
+            ];
+        }
+        return response()->json($response);
+    }
+
+    public function staff(Request $request)
+    {
+        $search = $request->search;
+        $staff = $this->tridatu->getStaffList();
+
+        if ($search) {
+            $staff = array_filter($staff, function($s) use ($search) {
+                return (isset($s['name']) && stripos($s['name'], $search) !== false) ||
+                       (isset($s['username']) && stripos($s['username'], $search) !== false);
+            });
+        }
+
+        $response = [];
+        foreach (array_slice($staff, 0, 20) as $s) {
+            $response[] = [
+                'id' => $s['id'],
+                'text' => $s['name'] ?? $s['username']
+            ];
+        }
+        return response()->json($response);
+    }
+
+    public function getAssetsByCustomer(Request $request)
+    {
+        $customerId = $request->cid;
+        if (!$customerId) return response()->json([]);
+
+        // Cari customer local dulu untuk dapatkan ID local-nya
+        $customer = Customer::where('external_id', $customerId)->first();
+        if (!$customer) return response()->json([]);
+
+        $assets = AssetUnit::with('assetType')
+            ->where('customer_id', $customer->id)
+            ->where('status', AssetUnit::STATUS_DEPLOYED)
+            ->get();
+
+        return response()->json($assets);
     }
 }

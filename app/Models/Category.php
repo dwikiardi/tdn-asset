@@ -10,13 +10,9 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = ['name'];
-    /**
-     * Get all of the asset for the Category
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function asset()
+
+    public function assetTypes()
     {
-        return $this->hasMany(Asset::class);
+        return $this->hasMany(AssetType::class);
     }
 }

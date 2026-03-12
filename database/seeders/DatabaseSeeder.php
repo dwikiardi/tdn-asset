@@ -6,21 +6,24 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     *
-     * @return void
-     */
     public function run()
     {
-        $this->call(UserSeeder::class);
-        $this->call(CompanySeeder::class);
-        $this->call(EmployeeSeeder::class);
-        $this->call(CategorySeeder::class);
-        $this->call(SupplierSeeder::class);
-        $this->call(RegionalSeeder::class);
-        $this->call(DivisionSeeder::class);
-        $this->call(AssetSeeder::class);
-        // \App\Models\User::factory(10)->create();
+        $this->call([
+            // === AUTH & USERS ===
+            UserSeeder::class,          // Admin login awal: admin / admin123
+
+            // === MASTER DATA ===
+            RegionSeeder::class,        // Wilayah / Regional
+            SiteSeeder::class,          // Lokasi: Gudang, POP, Hub, dll
+            CategorySeeder::class,      // Kategori aset (hardware, dll)
+            SupplierSeeder::class,      // Data supplier
+
+            // Seeder lama (companies, divisions, regionals, employees) dipertahankan
+            // tapi data di-skip jika tabel tidak relevan
+            // CompanySeeder::class, -- sudah tidak digunakan (pakai regions)
+            // RegionalSeeder::class,  -- sudah tidak digunakan (pakai regions)
+            // DivisionSeeder::class,  -- sudah tidak digunakan (pakai sites)
+            // EmployeeSeeder::class,  -- staff dari Tridatu Netmon via API
+        ]);
     }
 }

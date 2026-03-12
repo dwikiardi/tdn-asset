@@ -6,7 +6,7 @@
             <div class="card">
                 <div class="card-body border-bottom">
                     <div class="d-flex align-items-center">
-                        <h5 class="mb-0 card-title flex-grow-1">Monitoring Company</h5>
+                        <h5 class="mb-0 card-title flex-grow-1">Monitoring Pelanggan</h5>
                     </div>
                 </div>
                 <div class="card-body">
@@ -14,9 +14,8 @@
                     <table class="table table-striped align-middle dt-responsive nowrap w-100" id="monitoring-company-table">
                         <thead>
                             <th scope="col" style="width: 10px">No</th>
-                            <th scope="col">Nama Perusahaan</th>
-                            <th scope="col">Singkatan</th>
-                            <th scope="col">Jumlah Divisi</th>
+                            <th scope="col">Nama Pelanggan</th>
+                            <th scope="col">CID</th>
                             <th scope="col">Jumlah Transaksi</th>
                             <th scope="col" style="width:30px">Action</th>
                         </thead>
@@ -45,13 +44,13 @@
                 <div class="modal-body">
                     <table class="table">
                         <tr>
-                            <td style="width: 20%">Nama Perusahaan</td>
+                            <td style="width: 20%">Nama Pelanggan</td>
                             <td style="width: 3%">:</td>
                             <td id="name-detail"></td>
                         </tr>
 
                         <tr>
-                            <td style="width: 20%">Singkatan</td>
+                            <td style="width: 20%">CID</td>
                             <td style="width: 3%">:</td>
                             <td id="abbreviation-detail"></td>
                         </tr>
@@ -68,7 +67,6 @@
                     <table class="table">
                         <thead>
                             <th>No</th>
-                            <th>Divisi</th>
                             <th>No Order</th>
                             <th>UID</th>
                             <th>Kategori</th>
@@ -146,10 +144,6 @@
                         name: 'abbreviation'
                     },
                     {
-                        data: '_jumlah_division',
-                        name: '_jumlah_division'
-                    },
-                    {
                         data: '_jumlah_transaksi',
                         name: '_jumlah_transaksi'
                     },
@@ -202,21 +196,24 @@
                                     .format(
                                         'Do MMMM YYYY H:mm:ss')
 
+                                var uid = v.asset_unit ? (v.asset_unit.serial_number || v.asset_unit.mac_address || v.asset_unit.id) : '-';
+                                var category = (v.asset_unit && v.asset_unit.asset_type && v.asset_unit.asset_type.category) ? v.asset_unit.asset_type.category.name : '-';
+                                var spec = (v.asset_unit && v.asset_unit.asset_type) ? (v.asset_unit.asset_type.specification || v.asset_unit.asset_type.name || '-') : '-';
+
                                 html += '<tr>' +
                                     '       <td>' + (i + 1) + '</td>' +
-                                    '       <td>' + v.transaction.division.name +
-                                    '       <td>' + v.transaction.order_number +
+                                    '       <td>' + (v.transaction.transaction_number || v.transaction.order_number || '-') +
                                     '</td>' +
-                                    '       <td>' + v.asset.uid + '</td>' +
-                                    '       <td>' + v.asset.category.name + '</td>' +
-                                    '       <td>' + v.asset.specification + '</td>' +
+                                    '       <td>' + uid + '</td>' +
+                                    '       <td>' + category + '</td>' +
+                                    '       <td>' + spec + '</td>' +
                                     '       <td>' + status + '</td>' +
                                     '       <td>' + created_at + '</td>' +
                                     '    </tr>';
                             });
                         } else {
                             html =
-                                '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+                                '<tr><td colspan="7" class="text-center">Tidak ada data</td></tr>';
                         }
 
                         $('#table-body-transaksi').html(html);

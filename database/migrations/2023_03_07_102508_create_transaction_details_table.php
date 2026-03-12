@@ -6,26 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateTransactionDetailsTable extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
     public function up()
     {
         Schema::create('transaction_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('transaction_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('asset_id');
+            // Link ke unit fisik (bukan tipe barang)
+            $table->unsignedBigInteger('asset_unit_id');
+            $table->text('notes')->nullable();
             $table->timestamps();
+
+            $table->unique(['transaction_id', 'asset_unit_id']); // satu unit tidak bisa 2x di transaksi yg sama
         });
     }
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('transaction_details');

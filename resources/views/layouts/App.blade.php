@@ -3,7 +3,7 @@
 <body data-sidebar="dark">
 
     <!-- Loader -->
-    @include('layouts.partials.app-preloader')
+    {{-- @include('layouts.partials.app-preloader') --}}
 
     <!-- Begin page -->
     <div id="layout-wrapper">
@@ -48,7 +48,7 @@
     <!-- /Right-bar -->
 
     <!-- Right bar overlay-->
-    <div class="rightbar-overlay"></div>
+    <div class="rightbar-overlay" style="display: none !important;"></div>
 
     <!-- JAVASCRIPT -->
     @include('layouts.partials.app-plugin')

@@ -75,11 +75,12 @@
                     <table class="table">
                         <thead>
                             <th>No</th>
-                            <th>Nama Karyawan</th>
-                            <th>Divisi</th>
-                            <th>Catatan</th>
-                            <th>Status</th>
                             <th>Tanggal</th>
+                            <th>Status Transaksi</th>
+                            <th>Customer (CID)</th>
+                            <th>Status Barang</th>
+                            <th>Technician</th>
+                            <th>Catatan</th>
                         </thead>
                         <tbody id="table-body-transaksi"></tbody>
                     </table>
@@ -213,33 +214,38 @@
 
                         if (response.data.length > 0) {
                             $.each(response.data, function(i, v) {
-                                var status = '';
-                                if (v.transaction.status == 0) {
-                                    status =
-                                        '<span class="badge bg-success">IN</span>';
+                                // Detail Transaksi
+                                var transactionType = "";
+                                if (v.transaction.type == 'stock_in') {
+                                    transactionType = '<span class="badge bg-success">Masuk / Cabut</span>';
                                 } else {
-                                    status =
-                                        '<span class="badge bg-danger">OUT</span>';
+                                    transactionType = '<span class="badge bg-danger">Keluar / Pasang</span>';
                                 }
 
-                                if (v.transaction.note == null) {
-                                    v.transaction.note = "";
+                                var customerInfo = "-";
+                                if (v.transaction.customer) {
+                                    customerInfo = v.transaction.customer.name + ' (' + (v.transaction.customer.external_id || '-') + ')';
                                 }
 
-                                var created_at = moment(v.transaction.created_at).lang(
-                                        'id')
-                                    .format(
-                                        'Do MMMM YYYY H:mm:ss')
+                                var contractType = "-";
+                                if (v.transaction.contract_type == 'sewa') {
+                                    contractType = '<span class="badge badge-soft-info">Sewa</span>';
+                                } else if (v.transaction.contract_type == 'beli_putus') {
+                                    contractType = '<span class="badge badge-soft-primary">Beli Putus</span>';
+                                }
+
+                                var techName = v.transaction.tridatu_user_name || '-';
+                                var note = v.notes || v.transaction.notes || "-";
+                                var created_at = moment(v.transaction.created_at).lang('id').format('Do MMMM YYYY H:mm:ss');
 
                                 html += '<tr>' +
                                     '       <td>' + (i + 1) + '</td>' +
-                                    '       <td>' + v.transaction.employee.name +
-                                    '</td>' +
-                                    '       <td>' + v.transaction.division.name +
-                                    '</td>' +
-                                    '       <td>' + v.transaction.note + '</td>' +
-                                    '       <td>' + status + '</td>' +
                                     '       <td>' + created_at + '</td>' +
+                                    '       <td>' + transactionType + '</td>' +
+                                    '       <td>' + customerInfo + '</td>' +
+                                    '       <td>' + contractType + '</td>' +
+                                    '       <td>' + techName + '</td>' +
+                                    '       <td>' + note + '</td>' +
                                     '    </tr>';
                             });
                         } else {

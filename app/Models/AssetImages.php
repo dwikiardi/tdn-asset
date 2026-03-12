@@ -9,15 +9,19 @@ class AssetImages extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['asset_id', 'name'];
+    protected $fillable = [
+        'asset_type_id',
+        'name',
+        'path',
+        'is_primary',
+    ];
 
-    /**
-     * Get the asset that owns the AssetImages
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function asset()
+    protected $casts = [
+        'is_primary' => 'boolean',
+    ];
+
+    public function assetType()
     {
-        return $this->belongsTo(Asset::class);
+        return $this->belongsTo(AssetType::class);
     }
 }

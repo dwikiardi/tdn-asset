@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\Transaction;
+use App\Models\AssetUnit;
 use App\Models\TransactionDetail;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -56,7 +57,13 @@ class MonitorController extends Controller
     public function assetTransaction($id)
     {
         try {
-            $transaction_detail = TransactionDetail::where('asset_id', $id)->with('transaction', 'transaction.employee', 'transaction.division')->get();
+            // Get all unit IDs for this asset type
+            $unitIds = AssetUnit::where('asset_type_id', $id)->pluck('id');
+            
+            $transaction_detail = TransactionDetail::whereIn('asset_unit_id', $unitIds)
+                ->with('transaction', 'transaction.employee', 'transaction.division', 'transaction.customer')
+                ->get();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction retrieve successfully',
@@ -143,31 +150,34 @@ class MonitorController extends Controller
     public function companyDatatable(Request $request)
     {
         if ($request->ajax()) {
-            // $store = Store::where('user_id', auth()->user()->id)->first();
-            $details = Company::with('division', 'division.transaction');
-            // dd($order);
+            // Updated to fetch Customers instead of Company due to user request
+            $details = \App\Models\Customer::with('transactions.details', 'assetUnits');
+            
             return DataTables::eloquent($details)
                 ->addIndexColumn()
-                ->addColumn('_jumlah_division', function ($row) {
-                    return $row->division->count();
+                ->addColumn('name', function ($row) {
+                    return $row->name ?? '-';
+                })
+                ->addColumn('abbreviation', function ($row) {
+                    return $row->external_id ?? '-'; // Using external_id as CID placeholder
                 })
                 ->addColumn('_jumlah_transaksi', function ($row) {
-                    $sum = 0;
-                    foreach ($row->division as $key => $divisi) {
-                        $sum += $divisi->transaction->count();
+                    // Count total movement items (history rows) instead of just transaction headers
+                    $totalItems = 0;
+                    foreach ($row->transactions as $tx) {
+                        $totalItems += $tx->details->count();
                     }
-
-                    return $sum;
+                    return $totalItems;
                 })
                 ->addColumn('action', function ($row) {
                     return '<ul class="list-unstyled hstack gap-1 mb-0">
                                 <li data-bs-toggle="tooltip" data-bs-placement="top" title="History">
-                                    <a href="#" class="btn btn-sm btn-soft-primary btn-history" data-id="' . $row->id . '" data-name="' . $row->name . '" data-abbreviation="' . $row->abbreviation . '"><i class="mdi mdi-source-pull"></i> History</a>
+                                    <a href="#" class="btn btn-sm btn-soft-primary btn-history" data-id="' . $row->id . '" data-name="' . $row->name . '" data-abbreviation="' . $row->external_id . '"><i class="mdi mdi-source-pull"></i> History</a>
                                 </li>
 
                             </ul>';
                 })
-                ->rawColumns(['action', '_jumlah_division', '_jumlah_transaksi'])
+                ->rawColumns(['action'])
                 ->make(true);
         }
     }
@@ -175,9 +185,11 @@ class MonitorController extends Controller
     public function companyTransaction($id)
     {
         try {
-            $transaction = TransactionDetail::with('transaction.division', 'asset.category')->whereHas('transaction.division.company', function ($q) use ($id) {
-                return $q->where('id', $id);
-            })->get();
+            $transaction = TransactionDetail::with(['transaction.customer', 'assetUnit.assetType.category'])
+                ->whereHas('transaction', function ($q) use ($id) {
+                    return $q->where('customer_id', $id);
+                })
+                ->get();
 
             return response()->json([
                 'success' => true,

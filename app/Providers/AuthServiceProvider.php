@@ -25,6 +25,8 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        \Illuminate\Support\Facades\Auth::provider('tridatu', function ($app, array $config) {
+            return new \App\Providers\TridatuUserProvider($app->make(\App\Services\TridatuNetmonService::class));
+        });
     }
 }

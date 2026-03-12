@@ -11,67 +11,27 @@
             </a>
         </li>
 
-        <li class="menu-title" key="t-master-data">Master Data</li>
 
-        <li>
-            <a href="{{ route('employee') }}" class="waves-effect">
-                <i class='bx bx-group'></i>
-                <span key="t-karyawan">Karyawan</span>
-            </a>
-        </li>
 
-        <li>
-            <a href="{{ route('regional') }}" class="waves-effect">
-                <i class='bx bx-map-alt'></i>
-                <span key="t-regional">Regional</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('company') }}" class="waves-effect">
-                <i class='bx bxs-business'></i>
-                <span key="t-company">Perusahaan</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('division') }}" class="waves-effect">
-                <i class='bx bx-sitemap'></i>
-                <span key="t-division">Divisi</span>
-            </a>
-        </li>
-
-        <li class="menu-title" key="t-asset">Asset</li>
-
-        <li>
-            <a href="{{ route('category') }}" class="waves-effect">
-                <i class='bx bxs-purchase-tag-alt'></i>
-                <span key="t-category">Kategori</span>
-            </a>
-        </li>
-
-        <li>
-            <a href="{{ route('supplier') }}" class="waves-effect">
-                <i class='bx bx-paper-plane'></i>
-                <span key="t-supplier">Supplier</span>
-            </a>
-        </li>
+        <li class="menu-title" key="t-asset">Data Barang</li>
 
         <li>
             <a href="{{ route('asset') }}" class="waves-effect">
                 <i class='bx bxs-briefcase'></i>
-                <span key="t-karyawan">Asset</span>
+                <span key="t-karyawan">Data Barang</span>
             </a>
         </li>
 
         <li class="menu-title" key="t-apps">Transaksi</li>
 
         <li>
-            <a href="{{ route('transaction.create') }}" class="waves-effect">
+            <a href="{{ route('transaction.create', ['type' => 'out']) }}" class="waves-effect">
                 <i class='bx bx-transfer-alt'></i>
-                <span key="t-transaction">Tambah Transaksi</span>
+                <span key="t-transaction">Konfigurasi Aset</span>
             </a>
         </li>
+
+
 
         <li>
             <a href="{{ route('transaction') }}" class="waves-effect">
@@ -99,7 +59,7 @@
         <li>
             <a href="{{ route('monitor.company') }}" class="waves-effect">
                 <i class='bx bx-list-ul'></i>
-                <span key="t-transaction">Per Perusahaan</span>
+                <span key="t-transaction">Per Pelanggan</span>
             </a>
         </li>
     </ul>

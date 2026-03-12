@@ -14,12 +14,12 @@
                     <table class="table table-striped align-middle dt-responsive nowrap w-100" id="transaction-table">
                         <thead>
                             <th scope="col" style="width: 10px">No</th>
-                            <th scope="col">Karyawan</th>
-                            <th scope="col">Divisi</th>
-                            <th scope="col">Catatan</th>
+                            <th scope="col">CID (Customer)</th>
+                            <th scope="col">Teknisi</th>
                             <th scope="col">Status</th>
+                            <th scope="col">Kepemilikan</th>
                             <th scope="col">Asset</th>
-
+                            <th scope="col">Input Oleh</th>
                             <th scope="col">Created At</th>
                             <th scope="col" style="width:30px">Action</th>
                         </thead>
@@ -48,19 +48,19 @@
                 <div class="modal-body">
                     <table class="table table-borderless">
                         <tr>
-                            <td style="width: 30%">No Order</td>
+                            <td style="width: 30%">No Transaksi</td>
                             <td style="width: 5%">:</td>
-                            <td id="order_number"></td>
+                            <td id="transaction_number"></td>
                         </tr>
 
                         <tr>
-                            <td style="width: 30%">Nama Karyawan</td>
+                            <td style="width: 30%">Nama Teknisi</td>
                             <td style="width: 5%">:</td>
                             <td id="name"></td>
                         </tr>
 
                         <tr>
-                            <td style="width: 30%">Divisi</td>
+                            <td style="width: 30%">Customer (CID)</td>
                             <td style="width: 5%">:</td>
                             <td id="division"></td>
                         </tr>
@@ -151,24 +151,37 @@
                         className: 'text-center'
                     },
                     {
-                        data: 'employee.name',
-                        name: 'employee'
+                        data: 'customer.name',
+                        name: 'customer.name'
                     },
                     {
-                        data: 'division.name',
-                        name: 'division'
-                    },
-                    {
-                        data: 'note',
-                        name: 'note'
+                        data: 'technician',
+                        name: 'tridatu_user_name'
                     },
                     {
                         data: '_status',
-                        name: 'status'
+                        name: 'type'
+                    },
+                    {
+                        data: 'contract_type',
+                        name: 'contract_type',
+                        render: function(data) {
+                            if (data == 'sewa') return '<span class="badge badge-soft-info">Sewa</span>';
+                            if (data == 'beli_putus') return '<span class="badge badge-soft-primary">Beli Putus</span>';
+                            if (data == 'cicil') return '<span class="badge badge-soft-warning">Cicil</span>';
+                            if (data == 'pinjam') return '<span class="badge badge-soft-success">Pinjam</span>';
+                            return '-';
+                        }
                     },
                     {
                         data: '_asset',
-                        name: 'asset',
+                        name: '_asset',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'log_user',
+                        name: 'createdBy.name'
                     },
                     {
                         data: 'created_at',
@@ -248,29 +261,33 @@
                     url: "{{ url('transaction/detail') }}/" + id,
                     dataType: "JSON",
                     success: function(response) {
-                        $('#order_number').html(response.data.order_number);
-                        $('#name').html(response.data.employee.name);
-                        $('#division').html(response.data.division.name);
+                        $('#transaction_number').html(response.data.transaction_number);
+                        $('#name').html(response.data.tridatu_user_name);
+                        $('#division').html(response.data.customer_name);
 
-                        if (response.data.status == 0) {
+                        if (response.data.type == 'stock_in') {
                             $('#status-detail').html('<span class="badge bg-info">IN</span>');
-                            // console.log('IN');
                         } else {
                             $('#status-detail').html(
                                 '<span class="badge bg-danger">OUT</span>');
-                            // console.log('OUT');
                         }
 
-                        $('#note').html(response.data.note);
+                        $('#note').html(response.data.notes);
                         $('#modal-view').modal('show');
 
                         var detail = "";
 
-                        $.each(response.data.detail, function(i, v) {
+                        $.each(response.data.details, function(i, v) {
+                            var typeName = (v.asset_unit.asset_type) ? v.asset_unit.asset_type.name : 'Unknown';
+                            var identifier = v.asset_unit.serial_number || v.asset_unit.uid || '-';
+                            var assetDisplay = typeName + ' (' + identifier + ')';
+                            var category = (v.asset_unit.asset_type && v.asset_unit.asset_type.category) ? v.asset_unit.asset_type.category.name : '-';
+                            var spec = (v.asset_unit.asset_type) ? (v.asset_unit.asset_type.specification || '-') : '-';
+
                             detail += '<tr>' +
-                                '           <td>' + v.asset.uid + '</td>' +
-                                '           <td>' + v.asset.category.name + '</td>' +
-                                '           <td>' + v.asset.specification + '</td>' +
+                                '           <td>' + assetDisplay + '</td>' +
+                                '           <td>' + category + '</td>' +
+                                '           <td>' + spec + '</td>' +
                                 '      </tr>';
                         });
 
