@@ -21,10 +21,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
 
-# Update virtual host file to point to public directory
+# Update virtual host file to point to public directory and listen on 8081
 ENV APACHE_DOCUMENT_ROOT /var/www/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+RUN sed -i 's/80/8081/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
 # Set working directory
 WORKDIR /var/www
@@ -43,7 +44,7 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-EXPOSE 80
+EXPOSE 8081
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["apache2-foreground"]

@@ -9,7 +9,7 @@ services:
     container_name: tdn-asset-app
     restart: unless-stopped
     ports:
-      - target: 80
+      - target: 8081
         published: 8081
         protocol: tcp
         mode: host
