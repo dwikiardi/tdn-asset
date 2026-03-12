@@ -8,9 +8,10 @@ services:
     image: tdn-asset-app
     container_name: tdn-asset-app
     restart: unless-stopped
+    ports:
+      - "8081:80"
     volumes:
       - app_storage:/var/www/storage
-      - app_public:/var/www/public
     environment:
       - APP_NAME=TDN-Asset
       - APP_ENV=production
@@ -32,21 +33,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - tdn-network
-
-  nginx:
-    image: nginx:stable-alpine
-    container_name: tdn-asset-nginx
-    restart: unless-stopped
-    ports:
-      - "8081:80"
-    volumes:
-      - docker/nginx:/etc/nginx/conf.d:ro
-      - app_storage:/var/www/storage:ro
-      - app_public:/var/www/public:ro
-    depends_on:
-      - app
     networks:
       - tdn-network
 
@@ -75,8 +61,6 @@ volumes:
   db_data:
     driver: local
   app_storage:
-    driver: local
-  app_public:
     driver: local
 
 networks:
