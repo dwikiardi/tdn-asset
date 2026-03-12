@@ -1,32 +1,32 @@
 version: '3.8'
+
 services:
   app:
     build: .
     ports:
       - "8000:8000"
-    volumes:
-      - .:/var/www
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
       - APP_KEY=base64:base64:jLg4db7iA0H/PhGXUFCSSwKp1WHVCh2b0Z5ecuEe4Ag=
       - DB_CONNECTION=mysql
       - DB_HOST=db
-      - DB_PORT=4444
-      - DB_DATABASE=asset_management_system
-      - DB_USERNAME=root
+      - DB_PORT=3306
+      - DB_DATABASE=asset_db
+      - DB_USERNAME=sail
       - DB_PASSWORD=password
     depends_on:
       - db
 
   db:
     image: mysql:8.0
+    restart: always
     ports:
-      - "4444:4444"
+      - "3306:3306"
     environment:
-      - MYSQL_DATABASE=asset_management_system
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=root
+      - MYSQL_DATABASE=asset_db
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=sail
       - MYSQL_PASSWORD=password
     volumes:
       - db_data:/var/lib/mysql
