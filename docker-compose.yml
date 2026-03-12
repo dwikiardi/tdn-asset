@@ -1,71 +1,52 @@
-version: '3.8'
-
+# For more information: https://laravel.com/docs/sail
+version: '3'
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: tdn-asset-app
-    container_name: tdn-asset-app
-    restart: unless-stopped
-    ports:
-      - target: 8081
-        published: 8081
-        protocol: tcp
-        mode: host
-    volumes:
-      - app_storage:/var/www/storage
-    environment:
-      - APP_NAME=TDN-Asset
-      - APP_ENV=production
-      - APP_DEBUG=false
-      - APP_KEY=base64:jLg4db7iA0H/PhGXUFCSSwKp1WHVCh2b0Z5ecuEe4Ag=
-      - APP_URL=http://localhost:8081
-      - DB_CONNECTION=mysql
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_DATABASE=asset_management_system
-      - DB_USERNAME=asset_user
-      - DB_PASSWORD=asset_password
-      - CACHE_DRIVER=file
-      - SESSION_DRIVER=file
-      - QUEUE_CONNECTION=sync
-      - TRIDATU_BASE_URL=${TRIDATU_BASE_URL:-http://127.0.0.1:8001}
-      - TRIDATU_API_KEY=${TRIDATU_API_KEY:-tridatu_asset_mgmt_secret_2024}
-      - TRIDATU_CACHE_TTL=300
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - tdn-network
-
-  db:
-    image: mysql:8.0
-    container_name: tdn-asset-db
-    restart: unless-stopped
-    ports:
-      - "3307:3306"
-    environment:
-      - MYSQL_DATABASE=asset_management_system
-      - MYSQL_USER=asset_user
-      - MYSQL_PASSWORD=asset_password
-      - MYSQL_ROOT_PASSWORD=rootpassword
-    volumes:
-      - db_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - tdn-network
-
-volumes:
-  db_data:
-    driver: local
-  app_storage:
-    driver: local
-
+    laravel.test:
+        build:
+            context: ./vendor/laravel/sail/runtimes/8.2
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: sail-8.2/app
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${APP_PORT:-8081}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - mysql
+    mysql:
+        image: 'mysql/mysql-server:8.0'
+        ports:
+            - '${FORWARD_DB_PORT:-3306}:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD:-rootpassword}'
+            MYSQL_ROOT_HOST: "%"
+            MYSQL_DATABASE: '${DB_DATABASE:-asset_management_system}'
+            MYSQL_USER: '${DB_USERNAME:-asset_user}'
+            MYSQL_PASSWORD: '${DB_PASSWORD:-asset_password}'
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        volumes:
+            - 'sail-mysql:/var/lib/mysql'
+            - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+        networks:
+            - sail
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+            retries: 3
+            timeout: 5s
 networks:
-  tdn-network:
-    driver: bridge
+    sail:
+        driver: bridge
+volumes:
+    sail-mysql:
+        driver: local
