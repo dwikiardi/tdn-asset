@@ -9,12 +9,12 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
-      - APP_KEY=base64:MASUKKAN_APP_KEY_KAMU_DISINI
+      - APP_KEY=base64:base64:jLg4db7iA0H/PhGXUFCSSwKp1WHVCh2b0Z5ecuEe4Ag=
       - DB_CONNECTION=mysql
       - DB_HOST=db
       - DB_PORT=3306
-      - DB_DATABASE=asset_db
-      - DB_USERNAME=sail
+      - DB_DATABASE=asset_management_system
+      - DB_USERNAME=root
       - DB_PASSWORD=password
     depends_on:
       - db
@@ -26,7 +26,7 @@ services:
     environment:
       - MYSQL_DATABASE=asset_management_system
       - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=sail
+      - MYSQL_USER=root
       - MYSQL_PASSWORD=password
     volumes:
       - db_data:/var/lib/mysql
